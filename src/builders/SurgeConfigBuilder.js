@@ -98,6 +98,42 @@ export class SurgeConfigBuilder extends BaseConfigBuilder {
                     surgeProxy += `, grpc-service-name=${proxy.transport.service_name}`;
                 }
                 break;
+            case 'vless': {
+                // Surge Mac 6.12+ implements VLESS (RAW/WS/gRPC/XHTTP, TLS/REALITY).
+                surgeProxy = `${proxy.tag} = vless, ${proxy.server}, ${proxy.server_port}, username=${proxy.uuid}`;
+                if (proxy.flow) {
+                    surgeProxy += `, flow=${proxy.flow}`;
+                }
+                if (proxy.tls?.server_name) {
+                    surgeProxy += `, sni=${proxy.tls.server_name}`;
+                }
+                if (proxy.tls?.reality?.public_key) {
+                    surgeProxy += `, reality-public-key=${proxy.tls.reality.public_key}`;
+                    if (proxy.tls.reality.short_id) {
+                        surgeProxy += `, reality-short-id=${proxy.tls.reality.short_id}`;
+                    }
+                } else if (proxy.tls?.enabled) {
+                    surgeProxy += ', tls=true';
+                    if (proxy.tls.insecure) {
+                        surgeProxy += ', skip-cert-verify=true';
+                    }
+                    if (proxy.tls.alpn) {
+                        surgeProxy += `, alpn=${proxy.tls.alpn.join(',')}`;
+                    }
+                }
+                if (proxy.transport?.type === 'ws') {
+                    surgeProxy += `, ws=true, ws-path=${proxy.transport.path || '/'}`;
+                    if (proxy.transport.headers?.host) {
+                        surgeProxy += `, ws-headers=Host:${proxy.transport.headers.host}`;
+                    }
+                } else if (proxy.transport?.type === 'grpc') {
+                    surgeProxy += ', grpc=true';
+                    if (proxy.transport.service_name) {
+                        surgeProxy += `, grpc-service-name=${proxy.transport.service_name}`;
+                    }
+                }
+                break;
+            }
             case 'hysteria2':
                 surgeProxy = `${proxy.tag} = hysteria2, ${proxy.server}, ${proxy.server_port}, password=${proxy.password}`;
                 if (proxy.tls?.server_name) {
