@@ -505,6 +505,12 @@ export class SurgeConfigBuilder extends BaseConfigBuilder {
             });
         });
 
+        // Domains missing from the CN site lists would otherwise fall through to the proxy;
+        // resolving them only here keeps DNS lookups to requests no domain rule could decide.
+        if (rules.some(rule => rule.outbound === 'Location:CN')) {
+            finalConfig.push(`GEOIP,CN,${this.t('outboundNames.Location:CN')}`);
+        }
+
         finalConfig.push('FINAL,' + this.t('outboundNames.Fall Back'));
 
         return finalConfig.join('\n');
